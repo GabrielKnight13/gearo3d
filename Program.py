@@ -24,7 +24,6 @@ root.title('GearO3D')
 root.resizable(False, False)
 root.geometry('300x300') 
 
-
 def select_file():
     global filename
     global folder_selected
@@ -55,21 +54,18 @@ def parametreler():
     img = cv2.imread(filename)  # your gear image
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # 2. Threshold the image
-    #    - Because gear is white on black, 
-    #      we assume the white gear has high intensity
+    # Threshold the image
     _, thresh = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)
 
-    # Optional: Morphological operations
-    # e.g., closing small holes or removing noise
+    # Closing small holes or removing noise
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
 
-    # 3. Find the largest contour (the gear boundary)
+    # Find the largest contour (the gear boundary)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     gear_contour = max(contours, key=cv2.contourArea)  # largest contour by area
 
-    # 4. Compute gear center (from contour moments)
+    # Compute gear center (from contour moments)
     M = cv2.moments(gear_contour)
     if M["m00"] != 0:
         cx = int(M["m10"] / M["m00"])
@@ -79,7 +75,7 @@ def parametreler():
         x, y, w, h = cv2.boundingRect(gear_contour)
         cx, cy = x + w//2, y + h//2
 
-    # 5. Extract boundary points into a simpler format
+    # Extract boundary points into a simpler format
     # gear_contour is an array of [[x, y]] points
     # we can measure angle and radius from the center for each point
     boundary_points = gear_contour.reshape(-1, 2)  # Nx2 array
@@ -100,16 +96,14 @@ def parametreler():
     angles = np.mod(angles, 2*math.pi)
     radii = np.array(radii)
 
-    # 6. Sort by angle so we get a continuous angle -> radius mapping
+    # Sort by angle so we get a continuous angle -> radius mapping
     sort_idx = np.argsort(angles)
     angles_sorted = angles[sort_idx]
     radii_sorted = radii[sort_idx]
 
     # At this point, angles_sorted and radii_sorted define the boundary in polar coords.
-    # If you want a uniform sampling, you can interpolate radius at fixed angles. 
-    # For a rough approach, you can just work with the sorted boundary.
-
-    # 7. Smooth the radius signal (optional but often helps)
+    
+    # Smooth the radius signal (optional but often helps)
     # You can use cv2.GaussianBlur on the radii array if needed:
     window_size = 21  # or some other odd number
     radii_smooth = cv2.GaussianBlur(radii_sorted.reshape(-1,1), (window_size,1), 0).flatten()
@@ -145,11 +139,11 @@ def parametreler():
     mod_ =dis_yukseligi_in_mm /2
     print(f"modulus: {mod_}")
 
-    # 3) (Optional) If you need the peak heights (the 'highest' peaks), 
+    # If you need the peak heights (the 'highest' peaks), 
     #    you can look up their values in the radii_smooth array:
     peak_values = radii_smooth[peaks]
 
-    # 9. (Optional) Visualize results
+    # Visualize results
 
     plt.figure(figsize=(10,5))
     plt.plot(x_smooth, y_smooth, label="Radius (smoothed)")
@@ -166,7 +160,7 @@ def parametreler_2():
     if img is None:
         print("Error: The image did not load. Check the file path or file format.")
     else:
-        # (Optional) Apply a slight blur or smoothing if there's noise
+        # Apply a slight blur or smoothing if there's noise
         blurred = cv2.GaussianBlur(img, (3, 3), 0)
 
         # Threshold the image to separate the gear (white) from the background (black)
@@ -184,7 +178,7 @@ def parametreler_2():
         x, y, w, h = cv2.boundingRect(gear_contour)
 
         # Depending on the gear orientation, the thickness might be w (width) or h (height).
-        # Let’s assume the gear lays horizontally, so the depth is the width:
+        
         thickness_in_pixels = w
         print("Thickness in pixels (bounding rect):", thickness_in_pixels)
 
@@ -204,7 +198,7 @@ def stl():
     file_name_data = "data.txt"
     dosya_1 = os.path.join(current_dir, file_name_data)
     
-    #write to textfile
+    # Write to textfile
     with open(dosya_1, "w") as f:
         f.write(f"{int(num_peaks)}\n")  # Write first variable
         f.write(f"{int(mod_)}\n")  # Write second variable
@@ -246,9 +240,9 @@ def freecad_():
 
     print("Document saved successfully!")
 
-    # 4. Identify which objects you want to export. Usually, you collect them in a list
+    # Export.
     objects_for_export = [gear]
-    # 5. Export to STL
+    # Export to STL
 
     file_name = "gear.stl"
     export_path = os.path.join(current_dir, file_name)
