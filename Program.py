@@ -187,7 +187,6 @@ def parametreler_2():
         ppitch = sensor_width / image_width # mm/pixel
         distance_to_cam = 40
         focal_length = 6 #5-20 mm
-        num_teeth = 15
 
         thickness_in_mm = math.ceil((distance_to_cam / focal_length)*thickness_in_pixels*ppitch)
         
@@ -205,6 +204,7 @@ def stl():
         f.write(f"{int(thickness_in_mm)}\n")  # Write third variable
         f.write(f"{(folder_selected)}\n")  # Write third variable
     print("Data file created")
+    
 def freecad_():
     # Current working directory
     current_dir = os.getcwd()
